@@ -203,6 +203,48 @@ func (w *Worker) syncIssues(ctx context.Context, projectID uuid.UUID, fullName s
 			// Convert labels to JSONB (array of {name, color} objects)
 			labelsJSON, _ := json.Marshal(it.Labels)
 			
+			// Parse date strings from GitHub API
+			var createdAt, updatedAt, closedAt *time.Time
+			if it.CreatedAt != nil && *it.CreatedAt != "" {
+				if t, err := time.Parse(time.RFC3339, *it.CreatedAt); err == nil {
+					createdAt = &t
+				} else {
+					slog.Warn("failed to parse issue created_at",
+						"project_id", projectID,
+						"repo", fullName,
+						"issue_id", it.ID,
+						"created_at", *it.CreatedAt,
+						"error", err,
+					)
+				}
+			}
+			if it.UpdatedAt != nil && *it.UpdatedAt != "" {
+				if t, err := time.Parse(time.RFC3339, *it.UpdatedAt); err == nil {
+					updatedAt = &t
+				} else {
+					slog.Warn("failed to parse issue updated_at",
+						"project_id", projectID,
+						"repo", fullName,
+						"issue_id", it.ID,
+						"updated_at", *it.UpdatedAt,
+						"error", err,
+					)
+				}
+			}
+			if it.ClosedAt != nil && *it.ClosedAt != "" {
+				if t, err := time.Parse(time.RFC3339, *it.ClosedAt); err == nil {
+					closedAt = &t
+				} else {
+					slog.Warn("failed to parse issue closed_at",
+						"project_id", projectID,
+						"repo", fullName,
+						"issue_id", it.ID,
+						"closed_at", *it.ClosedAt,
+						"error", err,
+					)
+				}
+			}
+			
 			// Fetch comments for this issue (if comments_count > 0)
 			var commentsJSON []byte = []byte("[]")
 			if it.Comments > 0 {
@@ -215,8 +257,8 @@ func (w *Worker) syncIssues(ctx context.Context, projectID uuid.UUID, fullName s
 			}
 			
 			_, _ = w.pool.Exec(ctx, `
-INSERT INTO github_issues (project_id, github_issue_id, number, state, title, body, author_login, url, assignees, labels, comments_count, comments, last_seen_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, now())
+INSERT INTO github_issues (project_id, github_issue_id, number, state, title, body, author_login, url, assignees, labels, comments_count, comments, created_at_github, updated_at_github, closed_at_github, last_seen_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, now())
 ON CONFLICT (project_id, github_issue_id) DO UPDATE SET
   number = EXCLUDED.number,
   state = EXCLUDED.state,
@@ -228,10 +270,19 @@ ON CONFLICT (project_id, github_issue_id) DO UPDATE SET
   labels = EXCLUDED.labels,
   comments_count = EXCLUDED.comments_count,
   comments = EXCLUDED.comments,
+  created_at_github = COALESCE(EXCLUDED.created_at_github, github_issues.created_at_github),
+  updated_at_github = COALESCE(EXCLUDED.updated_at_github, github_issues.updated_at_github),
+  closed_at_github = COALESCE(EXCLUDED.closed_at_github, github_issues.closed_at_github),
   last_seen_at = now()
-`, projectID, it.ID, it.Number, it.State, it.Title, it.Body, it.User.Login, it.HTMLURL, assigneesJSON, labelsJSON, it.Comments, commentsJSON)
+`, projectID, it.ID, it.Number, it.State, it.Title, it.Body, it.User.Login, it.HTMLURL, assigneesJSON, labelsJSON, it.Comments, commentsJSON, createdAt, updatedAt, closedAt)
 		}
 	}
+	
+	slog.Info("sync issues completed",
+		"project_id", projectID,
+		"repo", fullName,
+		"total_issues", totalIssues,
+	)
 	return nil
 }
 
