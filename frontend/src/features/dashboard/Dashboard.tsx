@@ -60,6 +60,7 @@ import { BlogPage } from "../blog/pages/BlogPage";
 import { SettingsPage } from "../settings/pages/SettingsPage";
 import { AdminPage } from "../admin/pages/AdminPage";
 import { SearchPage } from "./pages/SearchPage";
+import { SettingsTabType } from "../settings/types";
 
 export function Dashboard() {
   const { userRole, logout, login } = useAuth();
@@ -379,6 +380,7 @@ export function Dashboard() {
             >
               {navItems.map((item) => {
                 const isActive = currentPage === item.id;
+                const Icon = item.icon as any;
                 return (
                   <button
                     key={item.id}
@@ -396,7 +398,7 @@ export function Dashboard() {
                     }`}
                     title={isSidebarCollapsed ? item.label : ""}
                   >
-                    <item.icon
+                    <Icon
                       className={`w-6 h-6 transition-colors ${isSidebarCollapsed ? "" : "flex-shrink-0"} ${
                         isActive
                           ? "text-white"
