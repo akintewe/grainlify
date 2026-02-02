@@ -374,7 +374,7 @@ export function BrowsePage({ onProjectClick }: BrowsePageProps) {
 
       {/* Projects Grid */}
       {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5">
           {[...Array(8)].map((_, idx) => (
             <ProjectCardSkeleton key={idx} />
           ))}
@@ -393,7 +393,7 @@ export function BrowsePage({ onProjectClick }: BrowsePageProps) {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-5">
           {projects.map((project) => (
             <ProjectCard
               key={project.id}

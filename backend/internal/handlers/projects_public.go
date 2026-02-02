@@ -700,11 +700,6 @@ LIMIT $1
 		}
 		defer rows.Close()
 
-		// Enrich with GitHub data (best effort)
-		ctx, cancel := context.WithTimeout(c.Context(), 8*time.Second)
-		defer cancel()
-		gh := github.NewClient()
-
 		var out []fiber.Map
 		for rows.Next() {
 			var id uuid.UUID
@@ -737,45 +732,10 @@ LIMIT $1
 				forks = *forksCount
 			}
 
-			// Get repo description and fresh data from GitHub (best effort).
-			// IMPORTANT: Do NOT drop projects if GitHub enrichment fails (rate limits, transient errors).
-			var description string
-			token := ""
-			if installationID != nil {
-				token = h.installationToken(ctx, *installationID)
-			}
-			repo, repoErr := gh.GetRepo(ctx, token, fullName)
-			if repoErr != nil {
-				slog.Warn("github repo enrichment failed in recommended (continuing without github metadata)",
-					"project_id", id,
-					"github_full_name", fullName,
-					"error", repoErr,
-				)
-			} else {
-				// Check if repo is private
-				if repo.Private {
-					slog.Info("skipping private repository in recommended",
-						"project_id", id,
-						"github_full_name", fullName,
-					)
-					continue // Skip this project
-				}
-				description = repo.Description
-				// Prefer live counts from GitHub if available
-				if repo.StargazersCount > 0 {
-					stars = repo.StargazersCount
-				}
-				if repo.ForksCount > 0 {
-					forks = repo.ForksCount
-				}
-				// Best-effort persist (non-blocking)
-				go func(projectID uuid.UUID, st, fk int) {
-					_, _ = h.db.Pool.Exec(context.Background(), `
-UPDATE projects SET stars_count=$2, forks_count=$3, updated_at=now()
-WHERE id=$1
-`, projectID, st, fk)
-				}(id, stars, forks)
-			}
+			// Skip per-project GitHub enrichment here to keep /projects/recommended fast.
+			// Description and live star/fork counts can be refreshed via background jobs
+			// or on the project detail endpoint instead.
+			description := ""
 
 			out = append(out, fiber.Map{
 				"id":                 id.String(),
