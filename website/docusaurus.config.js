@@ -108,6 +108,11 @@ const config = {
         defaultMode: 'light',
         respectPrefersColorScheme: false,
       },
+      docs: {
+        sidebar: {
+          hideable: true,
+        },
+      },
     }),
 };
 

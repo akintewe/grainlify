@@ -3,13 +3,66 @@
  * Add any overrides or theme customizations here.
  */
 
-/* Prevent horizontal overflow; vertical scroll stays on body */
-html {
-  overflow-x: hidden;
-}
+/* Prevent overflow on both axes; contain scroll to main content so nothing shows above navbar */
+html,
 body {
-  overflow-x: hidden;
-  overflow-y: auto;
+  overflow: hidden !important;
+  height: 100%;
+}
+#__docusaurus {
+  height: 100vh !important;
+  min-height: 100vh;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+/* Main wrapper: no scroll here so sidebar and main can scroll separately */
+#__docusaurus [class*="mainWrapper"] {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+/* Doc layout: fill height and allow two scroll areas (sidebar + main) */
+#__docusaurus [class*="docRoot"] {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+}
+#__docusaurus [class*="docsWrapper"] {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+}
+/* Sidebar: scroll independently; allow shrink when collapsed so toggle works */
+#__docusaurus .theme-doc-sidebar-container {
+  flex: 0 1 var(--doc-sidebar-width, 300px) !important;
+  min-width: var(--doc-sidebar-width, 300px) !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
+  transition: width 0.2s ease !important;
+}
+/* When collapsed: force narrow width so collapse/expand toggle works */
+#__docusaurus .theme-doc-sidebar-container[class*='docSidebarContainerHidden'] {
+  flex: 0 0 var(--doc-sidebar-hidden-width, 30px) !important;
+  min-width: var(--doc-sidebar-hidden-width, 30px) !important;
+  width: var(--doc-sidebar-hidden-width, 30px) !important;
+}
+/* Hide sidebar content as soon as collapse starts so we don’t see squashed text during the width transition. The expand arrow only appears after onTransitionEnd; this avoids the “text then arrow after 1s” flash. */
+#__docusaurus .theme-doc-sidebar-container[class*='docSidebarContainerHidden'] [class*='sidebarViewport'] > *:first-child {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+/* Main content: scroll independently */
+#__docusaurus [class*="docMainContainer"] {
+  flex: 1 1 0 !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+  overflow-x: hidden !important;
 }
 
 /* Brand-aligned warm palette (matches app landing/dashboard) */
@@ -85,6 +138,49 @@ html[data-theme='dark'] .footer {
 html[data-theme='dark'] [class*='sidebar'],
 html[data-theme='dark'] .theme-doc-sidebar-container {
   background-color: #221b17 !important;
+}
+
+/* Collapse button: center icon vertically, small margin above, solid background */
+.theme-doc-sidebar-container [class*='collapseSidebarButton'] {
+  margin-top: 0.5rem !important;
+  background-color: var(--ifm-background-surface-color) !important;
+  opacity: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+.theme-doc-sidebar-container [class*='collapseSidebarButton'] [class*='collapseSidebarButtonIcon'] {
+  margin-top: 0 !important;
+}
+.theme-doc-sidebar-container [class*='collapseSidebarButton']:hover,
+.theme-doc-sidebar-container [class*='collapseSidebarButton']:focus {
+  background-color: var(--ifm-color-emphasis-100) !important;
+  opacity: 1 !important;
+}
+html[data-theme='dark'] .theme-doc-sidebar-container [class*='collapseSidebarButton'] {
+  background-color: #221b17 !important;
+}
+html[data-theme='dark'] .theme-doc-sidebar-container [class*='collapseSidebarButton']:hover,
+html[data-theme='dark'] .theme-doc-sidebar-container [class*='collapseSidebarButton']:focus {
+  background-color: #2d2520 !important;
+}
+/* Expand button (when sidebar collapsed): center icon vertically and horizontally */
+.theme-doc-sidebar-container [class*='expandButton'] {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: var(--ifm-background-surface-color) !important;
+  opacity: 1 !important;
+}
+.theme-doc-sidebar-container [class*='expandButton'] [class*='expandButtonIcon'] {
+  margin: 0 !important;
+}
+html[data-theme='dark'] .theme-doc-sidebar-container [class*='expandButton'] {
+  background-color: #221b17 !important;
+}
+html[data-theme='dark'] .theme-doc-sidebar-container [class*='expandButton']:hover,
+html[data-theme='dark'] .theme-doc-sidebar-container [class*='expandButton']:focus {
+  background-color: #2d2520 !important;
 }
 
 /* Align footer with active theme (light/dark) instead of fixed dark gray */
