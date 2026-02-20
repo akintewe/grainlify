@@ -125,18 +125,14 @@ fn test_granular_pause_refund() {
     let flags = escrow_client.get_pause_flags();
     assert_eq!(flags.refund_paused, true);
 
-    let res = escrow_client.try_refund(
-        &bounty_id,
-    );
+    let res = escrow_client.try_refund(&bounty_id);
     assert!(res.is_err());
 
     escrow_client.set_paused(&None, &None, &Some(false));
     let flags = escrow_client.get_pause_flags();
     assert_eq!(flags.refund_paused, false);
 
-    escrow_client.refund(
-        &bounty_id,
-    );
+    escrow_client.refund(&bounty_id);
 }
 
 #[test]
