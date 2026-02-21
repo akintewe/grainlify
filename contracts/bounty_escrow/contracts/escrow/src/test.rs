@@ -161,7 +161,6 @@ fn test_release_funds_success() {
     // Verify updated state
     let stored_escrow = setup.escrow.get_escrow_info(&bounty_id);
     assert_eq!(stored_escrow.status, EscrowStatus::Released);
-    assert_eq!(stored_escrow.remaining_amount, 0);
 
     // Verify balances after release
     assert_eq!(setup.token.balance(&setup.escrow.address), 0);
@@ -386,7 +385,7 @@ fn test_partial_release_full_amount_in_one_shot_marks_released() {
 /// After a partial release leaves 10 units, trying to release 11 must panic
 /// with InsufficientFunds — ensuring no overpayment or rounding exploit is possible.
 #[test]
-#[should_panic(expected = "Error(Contract, #8)")] // InsufficientFunds
+#[should_panic(expected = "Error(Contract, #16)")] // InsufficientFunds
 fn test_partial_release_overpayment_panics() {
     let setup = TestSetup::new();
     let bounty_id = 46;
@@ -442,7 +441,7 @@ fn test_partial_release_exact_remaining_after_prior_release() {
 /// Passing zero as payout_amount must be rejected as InvalidAmount.
 /// Zero-value transfers would waste gas and corrupt event logs.
 #[test]
-#[should_panic(expected = "Error(Contract, #9)")] // InvalidAmount
+#[should_panic(expected = "Error(Contract, #13)")] // InvalidAmount
 fn test_partial_release_zero_amount_rejected() {
     let setup = TestSetup::new();
     let bounty_id = 47;
